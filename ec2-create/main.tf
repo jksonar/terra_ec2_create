@@ -33,7 +33,7 @@ resource "aws_instance" "web" {
   instance_type     = var.instance_type
   availability_zone = data.aws_availability_zones.available.names[0]
   key_name          = aws_key_pair.deployer.key_name
-  security_groups   = [aws_security_group.web_sg.name]
+  security_groups   = [ aws_security_group.web_sg.name ]
   user_data         = <<-EOF
     #!/bin/bash
     sudo apt update -y
