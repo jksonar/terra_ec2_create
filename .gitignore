@@ -18,6 +18,16 @@ crash.*.log
 
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+**/*.tfstate*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+crash.log
+**/.terraform.lock.hcl
 override.tf
 override.tf.json
 *_override.tf
@@ -32,3 +42,7 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+.terraformrc
+terraform.rc
+private.pem
+public.pem
