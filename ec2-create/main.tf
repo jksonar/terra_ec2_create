@@ -6,6 +6,8 @@ resource "tls_private_key" "rsa_4096" {
 
 # Declare the data source
 data "aws_availability_zones" "available" {
+  # use alias for resource
+  # provider = aws.us
   state = "available"
 }
 
@@ -51,6 +53,9 @@ resource "local_file" "private_key" {
   content         = tls_private_key.rsa_4096.private_key_openssh
   filename        = "${path.module}/private.pem"
   file_permission = "0600"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Save the public key to a local file
@@ -58,6 +63,9 @@ resource "local_file" "public_key" {
   content         = tls_private_key.rsa_4096.public_key_openssh
   filename        = "${path.module}/public.pem"
   file_permission = "0644"
+    lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Define variables for dynamic values
