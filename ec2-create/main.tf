@@ -1,55 +1,77 @@
-
-# crate new ssh key
-resource "tls_private_key" "rsa-4096-example" {
+# Generate a new SSH key pair
+resource "tls_private_key" "rsa_4096" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-# add public key to aws key
+# Declare the data source
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# Add public key to AWS as a key pair
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = resource.tls_private_key.rsa-4096-example.public_key_openssh
+  public_key = tls_private_key.rsa_4096.public_key_openssh
 }
 
-# find ami image
+# Find the latest Debian AMI
 data "aws_ami" "ec2_image" {
   most_recent = true
-
+  owners      = ["amazon"]
   filter {
-    # AMI name = debian-12-amd64-20231013-1532
     name   = "name"
-    values = ["debian-12-amd64-20231013-1532"]
+    values = [var.ami_name_filter]
   }
 }
 
-# create new aws ec2 server 
+# Create a new AWS EC2 instance
 resource "aws_instance" "web" {
   ami               = data.aws_ami.ec2_image.id
-  instance_type     = "t2.micro"
-  availability_zone = "us-east-1a"
-  key_name          = resource.aws_key_pair.deployer.key_name
+  instance_type     = var.instance_type
+  availability_zone = data.aws_availability_zones.available.names[0]
+  key_name          = aws_key_pair.deployer.key_name
   user_data         = <<-EOF
-  #!/bin/bash
-  sudo apt update -y
-  sudo apt install apache2 -y
-  sudo bash -c 'echo your very first web server > /var/www/html/index.html'
-  sudo systemctl start apache2
+    #!/bin/bash
+    sudo apt update -y
+    sudo apt install apache2 -y
+    echo "Your very first web server" | sudo tee /var/www/html/index.html
+    sudo systemctl enable apache2
+    sudo systemctl start apache2
   EOF
+
   tags = {
-    Name = "Hello_World_terraform"
-    env  = "dev-test"
+    Name        = "Hello_World_terraform"
+    Environment = "dev-test"
   }
 }
 
-resource "local_file" "key_file" {
-  content         = resource.tls_private_key.rsa-4096-example.private_key_openssh
-  filename        = "${path.module}/privat.pem"
-  file_permission = 0600
+# Save the private key to a local file
+resource "local_file" "private_key" {
+  content         = tls_private_key.rsa_4096.private_key_openssh
+  filename        = "${path.module}/private.pem"
+  file_permission = "0600"
 }
 
-resource "local_file" "pub_key_file" {
-  content         = resource.tls_private_key.rsa-4096-example.public_key_openssh
+# Save the public key to a local file
+resource "local_file" "public_key" {
+  content         = tls_private_key.rsa_4096.public_key_openssh
   filename        = "${path.module}/public.pem"
-  file_permission = 0600
+  file_permission = "0644"
 }
 
+# Define variables for dynamic values
+variable "ami_name_filter" {
+  description = "Filter for finding the AMI image"
+  default     = "debian-12-amd64-2025*"
+}
+
+variable "availability_zone" {
+  description = "AWS availability zone to deploy the EC2 instance"
+  default     = "us-east-1"
+}
+
+variable "instance_type" {
+  description = "Type of EC2 instance to launch"
+  default     = "t2.micro"
+}
