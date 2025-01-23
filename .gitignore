@@ -14,5 +14,5 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
-privat.pem
+private.pem
 public.pem

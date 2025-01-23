@@ -12,8 +12,8 @@ terraform {
 }
 
 provider "aws" {
-  alias = "us"
-  region = "us-east-1"
+  alias  = "us"
+  region = var.availability_zone
 }
 
 provider "aws" {

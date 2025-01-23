@@ -33,6 +33,7 @@ resource "aws_instance" "web" {
   instance_type     = var.instance_type
   availability_zone = data.aws_availability_zones.available.names[0]
   key_name          = aws_key_pair.deployer.key_name
+  security_groups   = [aws_security_group.web_sg.name]
   user_data         = <<-EOF
     #!/bin/bash
     sudo apt update -y
@@ -63,8 +64,35 @@ resource "local_file" "public_key" {
   content         = tls_private_key.rsa_4096.public_key_openssh
   filename        = "${path.module}/public.pem"
   file_permission = "0644"
-    lifecycle {
+  lifecycle {
     prevent_destroy = true
+  }
+}
+
+data "aws_vpc" "default" {}
+
+# read security group
+resource "aws_security_group" "web_sg" {
+  name        = "web_sg"
+  description = "Security group for web server"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Web_SG"
   }
 }
 
