@@ -54,9 +54,9 @@ resource "local_file" "private_key" {
   content         = tls_private_key.rsa_4096.private_key_openssh
   filename        = "${path.module}/private.pem"
   file_permission = "0600"
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # Save the public key to a local file
@@ -64,9 +64,9 @@ resource "local_file" "public_key" {
   content         = tls_private_key.rsa_4096.public_key_openssh
   filename        = "${path.module}/public.pem"
   file_permission = "0644"
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 data "aws_vpc" "default" {}
